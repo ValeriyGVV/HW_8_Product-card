@@ -1,19 +1,5 @@
-function createPagination(data) {
-  let count = data.total / data.limit;
-  let htmlStr = '';
-  const pageNumber = (data.skip / 10) + 1;
-  for(let item = 0; item < count; item++) {
-    htmlStr += `<li class="page-item ${pageNumber === item + 1 ? 'active' : ''}">
-                <span class="page-link">${+item + 1}</span>
-            </li>`;
-  }
-  document.querySelector('.pagination').innerHTML = htmlStr;
-}
-
-function renderProducts(data) {
-  const {products} = data;
-  console.log(data);
-
+// ======================время 9-50=====================================
+function renderProducts(products) {
   const htmlStr = products.map(product => `<div class="card col-sm-6 col-md-4 col-lg-3">
               <img src="${product.thumbnail}" class="card-img-top" alt="${product.brand} ${product.title}">
               <div class="card-body">
@@ -23,49 +9,40 @@ function renderProducts(data) {
               </div>
           </div>`).join('');
   document.getElementById('products').innerHTML = htmlStr;
-
-  createPagination(data);
 }
 
 function getProductsByCategory(categoryName) {
-  let url = 'https://dummyjson.com/products?limit=10';
+  let url = 'https://dummyjson.com/products?limit=100';
   if(categoryName) {
     url = `https://dummyjson.com/products/category/${categoryName}`;
   }
   fetch(url).then(res => res.json()).then(data => {
-    renderProducts(data);
+    renderProducts(data.products);
   })
 }
 
-function getNewProductsPortion(skip) {
-  fetch('https://dummyjson.com/products?limit=10&skip=' + skip)
-      .then(res => res.json())
-      .then(data => renderProducts(data));
-}
-
 function setListeners() {
-  document.querySelector('.pagination').onclick = e =>  {
-    console.log(e.target);
-    let newPage = e.target.innerText;
-    console.log(newPage);
-    getNewProductsPortion((+newPage - 1) * 10);
+  document.getElementById('categories').onchange = e => {
+    getProductsByCategory(e.currentTarget.value);
   }
 }
-
+// ----------------время 23-38---создание таблицы-------------
 function renderCategories(categories) {
-  $( "#categories" ).autocomplete({
-    source: categories,
-    minLength: 0,
-    select: function( event, ui ) {
-      getProductsByCategory(ui.item.value);
-    }
-  });
-  setListeners();
-}
+  const categoriesSelect = document.createElement('select');
+  categoriesSelect.className = 'form-control';
+  categoriesSelect.id = 'categories';
+// -------------время 16_06---------------------------------------------
+  let htmlStr = `<option value="">All</option>`;
+  htmlStr += categories.map(category => `<option value="${category}">${category}</option>`).join('');
+  categoriesSelect.innerHTML = htmlStr;
+  document.querySelector('.categories-block').prepend(categoriesSelect);
 
+  setListeners()
+}
+// =============Урок 9 время 6мин.45======================================
 window.onload = function() {
   const productPromise = new Promise((resolve, reject) => {
-    fetch('https://dummyjson.com/products?limit=10').then(res => res.json()).then(data => resolve(data))
+    fetch('https://dummyjson.com/products?limit=100').then(res => res.json()).then(data => resolve(data.products))
   })
 
   const categoriesPromise = new Promise((resolve, reject) => {
@@ -89,33 +66,3 @@ window.onload = function() {
  хотя в ряде ситуаций (http-запросы) это было бы довольно удобно.
   Возможно, он появится в следующей версии стандарта JavaScript.
   */
-  /*$( function() {
-	const availableTags = [
-	  "ActionScript",
-	  "AppleScript",
-	  "Asp",
-	  "BASIC",
-	  "C",
-	  "C++",
-	  "Clojure",
-	  "COBOL",
-	  "ColdFusion",
-	  "Erlang",
-	  "Fortran",
-	  "Groovy",
-	  "Haskell",
-	  "Java",
-	  "JavaScript",
-	  "Lisp",
-	  "Perl",
-	  "PHP",
-	  "Python",
-	  "Ruby",
-	  "Scala",
-	  "Scheme"
-	];
-	$( "#tags" ).autocomplete({
-	  source: availableTags
-	});
- } );
- */
