@@ -1,4 +1,4 @@
-unction createPagination(data) {
+function createPagination(data) {
   let count = data.total / data.limit;
   let htmlStr = '';
   const pageNumber = (data.skip / 10) + 1;
