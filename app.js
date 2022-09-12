@@ -1,48 +1,73 @@
-// ======================время 9-50=====================================
-function renderProducts(products) {
+unction createPagination(data) {
+  let count = data.total / data.limit;
+  let htmlStr = '';
+  const pageNumber = (data.skip / 10) + 1;
+  for(let item = 0; item < count; item++) {
+    htmlStr += `<li class="page-item ${pageNumber === item + 1 ? 'active' : ''}">
+                <span class="page-link">${+item + 1}</span>
+            </li>`;
+  }
+  document.querySelector('.pagination').innerHTML = htmlStr;
+}
+
+function renderProducts(data) {
+  const {products} = data;
+  console.log(data);
+
   const htmlStr = products.map(product => `<div class="card col-sm-6 col-md-4 col-lg-3">
               <img src="${product.thumbnail}" class="card-img-top" alt="${product.brand} ${product.title}">
-              <div class="card-body">
-                  <h5 class="card-title">${product.brand} ${product.title}</h5>
-                  <p class="card-text">${product.description}</p>
-                  <a href="#" class="btn btn-primary">Add to Cart</a>
+              <div class="card-body d-flex justify-content-between flex-column">
+                  <div>
+                    <h5 class="card-title">${product.brand} ${product.title}</h5>
+                    <p class="card-text">${product.description}</p>
+                    </div>
+                  <a href="#" class="btn btn-primary align-self-center mt-3">Add to Cart</a>
               </div>
           </div>`).join('');
   document.getElementById('products').innerHTML = htmlStr;
+
+  createPagination(data);
 }
 
 function getProductsByCategory(categoryName) {
-  let url = 'https://dummyjson.com/products?limit=100';
+  let url = 'https://dummyjson.com/products?limit=10';
   if(categoryName) {
     url = `https://dummyjson.com/products/category/${categoryName}`;
   }
   fetch(url).then(res => res.json()).then(data => {
-    renderProducts(data.products);
+    renderProducts(data);
   })
 }
 
+function getNewProductsPortion(skip) {
+  fetch('https://dummyjson.com/products?limit=10&skip=' + skip)
+      .then(res => res.json())
+      .then(data => renderProducts(data));
+}
+
 function setListeners() {
-  document.getElementById('categories').onchange = e => {
-    getProductsByCategory(e.currentTarget.value);
+  document.querySelector('.pagination').onclick = e =>  {
+    console.log(e.target);
+    let newPage = e.target.innerText;
+    console.log(newPage);
+    getNewProductsPortion((+newPage - 1) * 10);
   }
 }
-// ----------------время 23-38---создание таблицы-------------
-function renderCategories(categories) {
-  const categoriesSelect = document.createElement('select');
-  categoriesSelect.className = 'form-control';
-  categoriesSelect.id = 'categories';
-// -------------время 16_06---------------------------------------------
-  let htmlStr = `<option value="">All</option>`;
-  htmlStr += categories.map(category => `<option value="${category}">${category}</option>`).join('');
-  categoriesSelect.innerHTML = htmlStr;
-  document.querySelector('.categories-block').prepend(categoriesSelect);
 
-  setListeners()
+function renderCategories(categories) {
+  $( "#categories" ).autocomplete({
+    source: categories,
+    minLength: 0,
+    select: function( event, ui ) {
+      getProductsByCategory(ui.item.value);
+    }
+  });
+  setListeners();
 }
-// =============Урок 9 время 6мин.45======================================
+
 window.onload = function() {
   const productPromise = new Promise((resolve, reject) => {
-    fetch('https://dummyjson.com/products?limit=100').then(res => res.json()).then(data => resolve(data.products))
+    fetch('https://dummyjson.com/products?limit=10').then(res => res.json()).then(data => resolve(data))
   })
 
   const categoriesPromise = new Promise((resolve, reject) => {
@@ -54,15 +79,3 @@ window.onload = function() {
     renderCategories(data[1]);
   })
 }
-/*
-Промис – это специальный объект, который хранит своё состояние, текущий результат (если есть) и колбэки.
-При создании new Promise((resolve, reject) => ...) автоматически запускается функция-аргумент,
- которая должна вызвать resolve(result) при успешном выполнении и reject(error) – при ошибке.
-
-Аргумент resolve/reject (только первый, остальные игнорируются) передаётся обработчикам на этом промисе.
-Обработчики назначаются вызовом .then/catch.
-Для передачи результата от одного обработчика к другому используется чейнинг.
-У промисов есть некоторые ограничения. В частности, стандарт не предусматривает какой-то метод для «отмены» промиса,
- хотя в ряде ситуаций (http-запросы) это было бы довольно удобно.
-  Возможно, он появится в следующей версии стандарта JavaScript.
-  */
